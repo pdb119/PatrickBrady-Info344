@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <script type="text/javascript">
+        window.onload = function () {
+            document.getElementById("myForm").onsubmit = function () {
+                //alert("sub");
+                processText(document.getElementById("textBox").value);
+                return false;
+            }
+            document.getElementById("textBox").onchange = function () {
+                processText(document.getElementById("textBox").value);
+            }
+            document.getElementById("textBox").onkeyup = function () {
+                processText(document.getElementById("textBox").value);
+            }
+
+        }
+        var oldText = "";
+        function processText(enteredText) {
+            if (enteredText != oldText) {
+                oldText = enteredText;
+                ajax(enteredText);
+            }
+        }
+        function ajax(enteredText) {
+            document.getElementById("resultsArea").innerHTML = "";
+            if (enteredText == "") {
+                //message?
+            } else {
+            var ajax = new XMLHttpRequest();
+            ajax.open("GET", "serv.asmx/getResults?pref="+enteredText);
+            ajax.onload = function () {
+                var parse = new DOMParser();
+                //alert(ajax.responseText);
+                try{
+                    var xml = parse.parseFromString(ajax.responseText, "text/xml");
+                    var js = JSON.parse(xml.childNodes[0].childNodes[0].nodeValue);
+                    if (js.results.length == 0) {
+                        var temp = document.createElement("div");
+                        temp.innerHTML = "(no results)";
+                        document.getElementById("resultsArea").appendChild(temp);
+                    }
+                    for(var i=0;i<js.results.length;i++){
+                        var temp = document.createElement("div");
+                        temp.innerHTML = js.results[i];
+                        document.getElementById("resultsArea").appendChild(temp);
+                    }
+                } catch(e){
+                    var temp = document.createElement("div");
+                    temp.innerHTML = "Error. Try running <a href='http://bradypat.cloudapp.net/serv.asmx/buildTrie'>buildTrie</a>";
+                    document.getElementById("resultsArea").appendChild(temp);
+                }
+
+            };
+            ajax.send();
+        }
+        }
+    </script>
+    <div align="center">
+    <h1>Wikipedia Title Search</h1>
+<form id="myForm">
+    <input type="text" id="textBox"  autocomplete="off" placeholder="Wikipedia..."/>
+</form>
+    <div id="resultsArea"></div>
+        </div>
+    </body>
+</html>
