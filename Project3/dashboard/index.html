@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <script type="text/javascript">
+        window.onload = function () {
+            document.getElementById("myForm").onsubmit = function () {
+                addSite();
+            };
+            getData();
+
+        }
+        function getData() {                      
+            var ajax = new XMLHttpRequest();
+            ajax.open("GET", "dash.asmx/getCrawlerStats");
+            ajax.onload = function () {
+                var parse = new DOMParser();
+                //alert(ajax.responseText);
+                    var xml = parse.parseFromString(ajax.responseText, "text/xml");
+                    var js = JSON.parse(xml.childNodes[0].childNodes[0].nodeValue);
+                    document.getElementById("numArea").innerHTML = "Robot Files left to Load: " + js.results.robotQueue + "<br />" + "Pages left to crawl: " + js.results.siteQueue;
+                    for(var i=0;i<js.results.crawlers.length;i++){
+                        var temp = document.createElement("div");
+                        temp.innerHTML = "<h3>"+js.results[i].id+"</h3>";
+                        document.getElementById("crawlerArea").appendChild(temp);
+                    }
+
+            };
+            ajax.send();
+        }
+        function addSite() {
+            var ajax = new XMLHttpRequest();
+            ajax.open("GET", "dash.asmx/addSite?url="+document.getElementById("textBox"));
+            ajax.onload = function () {
+                alert("added");
+            };
+            ajax.send();
+        }
+    </script>
+<form id="myForm">
+    <input type="text" id="textBox"  autocomplete="off" placeholder="add site to crawl"/>
+</form>
+    <div id="numArea"></div>
+    <div id="crawlerArea"></div>
+    </body>
+</html>
