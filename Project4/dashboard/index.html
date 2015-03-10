@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <script type="text/javascript">
+        window.onload = function () {
+            document.getElementById("pa2Area").style.left = document.getElementById("textBox").style.left;
+            document.getElementById("pa2Area").style.top = document.getElementById("textBox").style.top;
+            document.getElementById("myForm").onsubmit = function () {
+                //alert("sub");
+                search(document.getElementById("textBox").value);
+                document.getElementById("jsonp").setAttribute("src", "http://54.173.66.107/jsonp.php?q=" + document.getElementById("textBox").value);
+                return false;
+            }
+            document.getElementById("textBox").onchange = function () {
+                processText(document.getElementById("textBox").value);
+            }
+            document.getElementById("textBox").onkeyup = function () {
+                processText(document.getElementById("textBox").value);
+            }
+
+        }
+        function suggestionPushed(suggestion){
+            document.getElementById("textBox").value = suggestion;
+            search(suggestion);
+        }
+        var oldText = "";
+        function processText(enteredText) {
+            if (enteredText != oldText) {
+                oldText = enteredText;
+                ajax(enteredText);
+            }
+        }
+        function ajax(enteredText) {
+            document.getElementById("pa2Area").innerHTML = "";
+            if (enteredText == "") {
+                //message?
+            } else {
+            var ajax = new XMLHttpRequest();
+            ajax.open("GET", "dash.asmx/getResults?pref="+enteredText);
+            ajax.onload = function () {
+                var parse = new DOMParser();
+                //alert(ajax.responseText);
+                try{
+                    var xml = parse.parseFromString(ajax.responseText, "text/xml");
+                     //alert(ajax.responseText);;
+                    var js = JSON.parse(xml.childNodes[0].childNodes[0].nodeValue);
+                    if (js.results.length == 0) {
+                        var temp = document.createElement("div");
+                        temp.innerHTML = "(no results)";
+                        document.getElementById("pa2Area").appendChild(temp);
+                        document.getElementById("pa2Area").style.display = "block";
+                    }
+                    for (var i = 0; i < js.results.length; i++) {
+                        if (js.results[i] != "empty") {
+                            var temp = document.createElement("div");
+                            var link = document.createElement("a");
+                            link.setAttribute("onclick", "suggestionPushed('" + js.results[i] + "')");
+                            link.setAttribute("href", "#");
+                            link.innerHTML = js.results[i];
+                            temp.appendChild(link);
+                            document.getElementById("pa2Area").appendChild(temp);
+                            document.getElementById("pa2Area").style.display = "block";
+                        }
+                    }
+                } catch (e) {
+                    /*
+                    var temp = document.createElement("div");
+                    temp.innerHTML = "Error. Try running <a href='http://bradypat.cloudapp.net/dash.asmx/buildTrie'>buildTrie</a>";
+                    document.getElementById("pa2Area").appendChild(temp);
+                    document.getElementById("pa2Area").style.display = "block";
+                    */
+
+                }
+
+            };
+            ajax.send();
+        }
+        }
+        function search(enteredText) {
+            document.getElementById("pa3Area").innerHTML = "";
+            if (enteredText == "") {
+                //message?
+            } else {
+                var ajax = new XMLHttpRequest();
+                ajax.open("GET", "dash.asmx/getSites?search=" + enteredText);
+                ajax.onload = function () {
+                    var parse = new DOMParser();
+                    //alert(ajax.responseText);
+                    try {                       
+                        var js = JSON.parse(ajax.responseText);
+                        if (js.results.length == 0) {
+                            var temp = document.createElement("div");
+                            temp.innerHTML = "(no results)";
+                            document.getElementById("pa3Area").appendChild(temp);
+                        }
+                        for (var i = 0; i < js.results.length; i++) {
+                            var temp = document.createElement("div");
+                            temp.innerHTML = "<b>" + js.results[i].PartitionKey + "</b>" + "<br./>" + js.results[i].fullUrl;
+                            document.getElementById("pa3Area").appendChild(temp);
+                        }
+                    } catch (e) {
+                        var temp = document.createElement("div");
+                        temp.innerHTML = "Error";
+                        document.getElementById("pa3Area").appendChild(temp);
+
+                    }
+
+                };
+                ajax.send();
+            }
+        }
+        function pa1Return(data) {
+            alert(data);            
+            var js = JSON.parse();
+            var tab = document.createElement("table");
+            var headers = document.createElement("tr");
+            var col;
+            col = document.createElement("td");
+            col.innerHTML = "<b>Player</b>";
+            headers.appendChild(col);
+            col = document.createElement("td");
+            col.innerHTML = "<b>Gp</b>";
+            headers.appendChild(col);
+            col = document.createElement("td");
+            col.innerHTML = "<b>Fgp</b>";
+            headers.appendChild(col);
+            col = document.createElement("td");
+            col.innerHTML = "<b>Tpp</b>";
+            headers.appendChild(col);
+            col = document.createElement("td");
+            col.innerHTML = "<b>Ftp</b>";
+            headers.appendChild(col);
+            col = document.createElement("td");
+            col.innerHTML = "<b>Ppg</b>";
+            headers.appendChild(col);
+            tab.appendChild(headers);
+            var row;
+            for (var i = 0; i < js.results.length; i++) {
+                row = document.createElement("tr");
+                col = document.createElement("td");
+                col.innerHTML = js.results[i].name;
+                row.appendChild(col);
+                col = document.createElement("td");
+                col.innerHTML = js.results[i].gp;
+                row.appendChild(col);
+                col = document.createElement("td");
+                col.innerHTML = js.results[i].fgp;
+                row.appendChild(col);
+                col = document.createElement("td");
+                col.innerHTML = js.results[i].tpp;
+                row.appendChild(col);
+                col = document.createElement("td");
+                col.innerHTML = js.results[i].ftp;
+                row.appendChild(col);
+                col = document.createElement("td");
+                col.innerHTML = js.results[i].ppg
+                row.appendChild(col);
+                tab.appendChild(row);
+            }
+            document.getElementById("pa1Area").innerHTML = "";
+            document.getElementById("pa1Area").appendChild(tab);
+        }
+    </script>
+    <style type="text/css">
+        #pa2Area {
+            position:absolute;
+            width:300px;
+            height:auto;            
+        }
+    </style>
+    <div align="center">
+    <h1>Wikipedia Title Search</h1>
+<form id="myForm">
+    <input type="text" id="textBox"  autocomplete="off" placeholder="Wikipedia..."/>
+    <input type="submit" />
+</form>
+        <div id="pa2Area" style="display:none;"></div>
+    <div id="pa1Area"></div>
+        </div>
+    <div id="pa3Area"></div>
+    <script id="jsonp"></script>
+    </body>
+</html>

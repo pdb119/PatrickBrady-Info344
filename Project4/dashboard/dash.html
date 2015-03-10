@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <script type="text/javascript">
+        window.onload = function () {
+            document.getElementById("myForm").onsubmit = function () {
+                addSite();
+            };
+            getData();
+            setInterval("getData()", 10000);
+        }
+        function getData() {                      
+            var ajax = new XMLHttpRequest();
+            ajax.open("GET", "dash.asmx/getCrawlerStats");
+            ajax.onload = function () {
+                var parse = new DOMParser();
+                //alert(ajax.responseText);
+                var xml = parse.parseFromString(ajax.responseText, "text/xml");
+                //alert(xml.childNodes[0].childNodes[0].nodeValue);
+                    var js = JSON.parse(xml.childNodes[0].childNodes[0].nodeValue);
+                    document.getElementById("numArea").innerHTML = "Robot Files left to Load: " + js.results.robotQueue + "<br />" + "Pages left to crawl: " + js.results.siteQueue;
+                    document.getElementById("crawlerArea").innerHTML = "";
+                    for(var i=0;i<js.results.crawlers.length;i++){
+                        var temp = document.createElement("div");
+                        temp.innerHTML = "<h3>" + js.results.crawlers[i].id + "</h3><br/><b>Pages Crawled:</b> " + js.results.crawlers[i].num + "<br /><b>Ram:</b> " + js.results.crawlers[i].ram + "<br /><b>Cpu:</b> " + js.results.crawlers[i].cpu + "%" + "<br /><b>Status:</b> " + js.results.crawlers[i].status;
+
+                        document.getElementById("crawlerArea").appendChild(temp);
+                    }
+
+            };
+            ajax.send();
+        }
+        function addSite() {
+            var ajax = new XMLHttpRequest();
+            ajax.open("GET", "dash.asmx/addSite?url="+document.getElementById("textBox"));
+            ajax.onload = function () {
+                alert("added");
+            };
+            ajax.send();
+        }
+    </script>
+    Auto Refresh every 10 seconds
+<form id="myForm">
+    <input type="text" id="textBox"  autocomplete="off" placeholder="add robot file url to crawl"/>
+</form>
+    <div id="numArea"></div>
+    <div>Domains crawled: http://www.cnn.com/robots.txt, </div>
+    <div id="crawlerArea"></div>
+    <form id="myForm2" action="http://bradypat.cloudapp.net/dash.asmx/getSites" method="post">
+        <input type="text" id="textBox" name="search" autocomplete="off" placeholder="search by url" />
+        <input type="submit" />
+    </form>
+    </body>
+</html>
